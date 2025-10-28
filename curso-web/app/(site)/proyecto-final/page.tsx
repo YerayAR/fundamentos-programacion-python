@@ -15,7 +15,8 @@ export const metadata = buildPageMetadata({
 
 export default async function ProyectoFinalPage() {
   const project = await getProjectFinal();
-  const githubLink = `${REPO_URL.replace(/\/$/, "")}/blob/main/content/proyecto-final/10-proyecto-final.md`;
+  // GitHub link points to curso/modulo10-proyecto-final.md
+  const githubLink = `${REPO_URL.replace(/\/$/, "")}/blob/master/curso/modulo10-proyecto-final.md`;
 
   return (
     <article className="space-y-10">

@@ -39,8 +39,9 @@ export default async function ModulePage({ params }: ModulePageProps) {
   }
 
   const navigation = await getAdjacentModules(currentModule.slug);
-  const fileName = `${String(currentModule.order).padStart(2, "0")}-${currentModule.slug}.md`;
-  const githubLink = `${REPO_URL.replace(/\/$/, "")}/blob/main/content/modulos/${fileName}`;
+  // GitHub link points to curso/moduloXX-name.md files
+  const fileName = `modulo${String(currentModule.order).padStart(2, "0")}-${currentModule.slug.replace(/^\d+-/, "")}.md`;
+  const githubLink = `${REPO_URL.replace(/\/$/, "")}/blob/master/curso/${fileName}`;
 
   return (
     <article className="space-y-10">

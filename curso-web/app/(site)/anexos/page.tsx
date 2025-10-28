@@ -45,8 +45,8 @@ export default async function AnexosPage() {
       </nav>
 
       {annexes.map((annex) => {
-        const fileName = `${annex.slug}.md`;
-        const githubLink = `${REPO_URL.replace(/\/$/, "")}/blob/main/content/anexos/${fileName}`;
+        // GitHub link points to curso/anexos.md
+        const githubLink = `${REPO_URL.replace(/\/$/, "")}/blob/master/curso/anexos.md`;
 
         return (
           <section key={annex.slug} id={annex.slug} className="space-y-4">
