@@ -1,0 +1,10 @@
+.next
+node_modules
+out
+.vercel
+*.log
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+dist
+public/search-index.json

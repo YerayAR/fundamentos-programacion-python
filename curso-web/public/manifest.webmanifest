@@ -1,0 +1,22 @@
+{
+  "name": "Fundamentos de Programacion en Python",
+  "short_name": "Fundamentos",
+  "description": "Curso en 10 modulos para dominar los fundamentos de programacion en Python.",
+  "lang": "es",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ]
+}

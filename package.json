@@ -1,0 +1,23 @@
+{
+  "name": "fundamentos-programacion-python",
+  "version": "1.0.0",
+  "description": "Curso completo de fundamentos de programación con Python - Contenido markdown y sitio web interactivo con Next.js",
+  "private": true,
+  "scripts": {
+    "dev": "cd curso-web && npm run dev",
+    "build": "cd curso-web && npm run build",
+    "start": "cd curso-web && npm start",
+    "lint": "cd curso-web && npm run lint",
+    "typecheck": "cd curso-web && npm run typecheck"
+  },
+  "keywords": [
+    "python",
+    "programming",
+    "tutorial",
+    "course",
+    "education",
+    "nextjs"
+  ],
+  "author": "",
+  "license": "MIT"
+}
