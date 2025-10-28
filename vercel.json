@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd curso-web && npm ci && npm run build",
+  "outputDirectory": "curso-web/.next",
+  "installCommand": "npm install --prefix curso-web",
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/curso-web/$1"
+    }
+  ]
+}

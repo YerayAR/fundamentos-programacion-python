@@ -11,10 +11,10 @@ import { unified } from "unified";
 import remarkParse from "remark-parse";
 import { visit } from "unist-util-visit";
 
-const CONTENT_ROOT = path.join(process.cwd(), "content");
-const MODULES_DIR = path.join(CONTENT_ROOT, "modulos");
-const PROJECT_DIR = path.join(CONTENT_ROOT, "proyecto-final");
-const ANNEXES_DIR = path.join(CONTENT_ROOT, "anexos");
+const CONTENT_ROOT = path.join(process.cwd(), "..", "curso");
+const MODULES_DIR = CONTENT_ROOT;
+const PROJECT_DIR = CONTENT_ROOT;
+const ANNEXES_DIR = CONTENT_ROOT;
 
 export type ModuleFrontMatter = {
   title: string;
@@ -52,6 +52,21 @@ export type AnnexContent = {
   headings: TocHeading[];
 };
 
+function fixMarkdownForMDX(content: string): string {
+  // Split details/summary tags into separate lines for MDX
+  let fixed = content;
+  
+  // Replace <details><summary>text</summary> with proper formatting
+  fixed = fixed.replace(/<details><summary>([^<]+)<\/summary>/g, (match, summaryText) => {
+    return `\n<details>\n<summary>${summaryText}</summary>\n`;
+  });
+  
+  // Ensure </details> is on its own line with blank lines
+  fixed = fixed.replace(/<\/details>/g, '\n</details>\n');
+  
+  return fixed;
+}
+
 const mdxPlugins = {
   remarkPlugins: [remarkGfm],
   rehypePlugins: [
@@ -75,15 +90,22 @@ const mdxPlugins = {
   ]
 };
 
-async function readDirectoryFiles(dirPath: string) {
+async function readDirectoryFiles(dirPath: string, prefix?: string) {
   const entries = await fs.readdir(dirPath);
   return entries
-    .filter((file) => file.endsWith(".md") || file.endsWith(".mdx"))
+    .filter((file) => {
+      if (!(file.endsWith(".md") || file.endsWith(".mdx"))) return false;
+      if (prefix) return file.startsWith(prefix);
+      return true;
+    })
     .sort();
 }
 
 function slugFromFilename(fileName: string) {
-  return fileName.replace(/\.mdx?$/, "").replace(/^\d+-/, "");
+  // Handle formato modulo01-nombre.md -> 01-nombre
+  return fileName
+    .replace(/\.mdx?$/, "")
+    .replace(/^modulo(\d+)-/, "$1-");
 }
 
 function moduleHref(slug: string) {
@@ -119,13 +141,49 @@ function buildHeadings(body: string): TocHeading[] {
   return headings;
 }
 
+function extractTitleFromMarkdown(body: string): string {
+  const lines = body.trim().split("\n");
+  for (const line of lines) {
+    const match = line.match(/^#\s+(.+)$/);
+    if (match) {
+      return match[1].trim();
+    }
+  }
+  return "Sin título";
+}
+
+function extractOrderFromFilename(fileName: string): number {
+  const match = fileName.match(/modulo(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
 async function compileContent(filePath: string) {
   const raw = await fs.readFile(filePath, "utf-8");
-  const { content: body } = matter(raw);
-  const { content, frontmatter } = await compileMDX<ModuleFrontMatter>({
-    source: raw,
+  const parsed = matter(raw);
+  let body = parsed.content;
+  
+  // Fix markdown for MDX compatibility
+  body = fixMarkdownForMDX(body);
+  
+  // Auto-generate frontmatter if missing
+  let frontmatter = parsed.data as ModuleFrontMatter;
+  if (!frontmatter.title || !frontmatter.description) {
+    const title = extractTitleFromMarkdown(body);
+    const fileName = path.basename(filePath);
+    const order = extractOrderFromFilename(fileName);
+    
+    frontmatter = {
+      title: frontmatter.title || title,
+      description: frontmatter.description || title,
+      order: frontmatter.order || order,
+      keywords: frontmatter.keywords || []
+    };
+  }
+
+  const { content } = await compileMDX<ModuleFrontMatter>({
+    source: body,
     options: {
-      parseFrontmatter: true,
+      parseFrontmatter: false,
       mdxOptions: mdxPlugins as any
     }
   });
@@ -135,7 +193,7 @@ async function compileContent(filePath: string) {
 }
 
 export async function getAllModules(): Promise<ModuleSummary[]> {
-  const files = await readDirectoryFiles(MODULES_DIR);
+  const files = await readDirectoryFiles(MODULES_DIR, "modulo");
   const modules = await Promise.all(
     files.map(async (file) => {
       const filePath = path.join(MODULES_DIR, file);
@@ -153,7 +211,7 @@ export async function getAllModules(): Promise<ModuleSummary[]> {
 }
 
 export async function getModuleBySlug(slug: string): Promise<ModuleContent | null> {
-  const files = await readDirectoryFiles(MODULES_DIR);
+  const files = await readDirectoryFiles(MODULES_DIR, "modulo");
   const entry = files.find((file) => slugFromFilename(file) === slug);
 
   if (!entry) {
@@ -183,8 +241,11 @@ export async function getAdjacentModules(slug: string) {
 }
 
 export async function getProjectFinal(): Promise<ProjectContent> {
-  const files = await readDirectoryFiles(PROJECT_DIR);
-  const target = files.find((file) => file.startsWith("10-")) ?? files[0];
+  const files = await readDirectoryFiles(PROJECT_DIR, "modulo10");
+  const target = files[0];
+  if (!target) {
+    throw new Error("No se encontró el archivo del proyecto final");
+  }
   const filePath = path.join(PROJECT_DIR, target);
   const { content, frontmatter, headings } = await compileContent(filePath);
   return {
@@ -195,7 +256,7 @@ export async function getProjectFinal(): Promise<ProjectContent> {
 }
 
 export async function getAnnexes(): Promise<AnnexContent[]> {
-  const files = await readDirectoryFiles(ANNEXES_DIR);
+  const files = await readDirectoryFiles(ANNEXES_DIR, "anexos");
   const annexes = await Promise.all(
     files.map(async (file) => {
       const filePath = path.join(ANNEXES_DIR, file);
